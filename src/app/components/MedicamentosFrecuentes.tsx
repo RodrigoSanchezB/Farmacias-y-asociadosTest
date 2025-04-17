@@ -59,3 +59,6 @@ export default function MedicamentosFrecuentes() {
     </div>
   );
 }
+
+// TODO: Reemplazar localStorage con conexión a una base de datos real para persistencia de medicamentos frecuentes
+// FUTURO: conectar esta funcionalidad con Supabase o Firebase
