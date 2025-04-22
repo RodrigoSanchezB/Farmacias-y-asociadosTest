@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const medicamentosMock = [
   "Paracetamol",
@@ -22,9 +23,11 @@ export default function MedicamentosFrecuentes() {
     let actualizados;
     if (frecuentes.includes(med)) {
       actualizados = frecuentes.filter((m) => m !== med);
+      toast.info(`${med} eliminado de tus medicamentos frecuentes`);
     } else {
       actualizados = [...frecuentes, med];
-    }
+      toast.success(`${med} guardado como frecuente`);
+    }    
     setFrecuentes(actualizados);
     localStorage.setItem("frecuentes", JSON.stringify(actualizados));
   };
