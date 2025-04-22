@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -17,14 +18,17 @@ export default function LoginForm() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-
+  
+    // Simulación de login válido
     if (email === "admin@farmacias.cl" && password === "1234") {
       localStorage.setItem("session", JSON.stringify({ email }));
+      toast.success("Inicio de sesión exitoso 🎉");
       router.push("/home");
     } else {
-      alert("Credenciales inválidas");
+      toast.error("Credenciales inválidas ❌");
     }
   };
+  
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col gap-4 max-w-sm mx-auto mt-10">
