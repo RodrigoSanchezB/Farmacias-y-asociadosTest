@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 export default function LoginForm() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -14,21 +15,23 @@ export default function LoginForm() {
     if (session) {
       router.push("/home");
     }
-  }, [router]); // 👈 Ahora sí
+  }, [router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-  
-    // Simulación de login válido
-    if (email === "admin@farmacias.cl" && password === "1234") {
-      localStorage.setItem("session", JSON.stringify({ email }));
-      toast.success("Inicio de sesión exitoso 🎉");
-      router.push("/home");
-    } else {
-      toast.error("Credenciales inválidas ❌");
-    }
+    setLoading(true);
+
+    setTimeout(() => {
+      if (email === "admin@farmacias.cl" && password === "1234") {
+        localStorage.setItem("session", JSON.stringify({ email }));
+        toast.success("Inicio de sesión exitoso 🎉");
+        router.push("/home");
+      } else {
+        toast.error("Credenciales inválidas ❌");
+      }
+      setLoading(false);
+    }, 1000);
   };
-  
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col gap-4 max-w-sm mx-auto mt-10">
@@ -51,9 +54,10 @@ export default function LoginForm() {
       />
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        disabled={loading}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
       >
-        Ingresar
+        {loading ? "Cargando..." : "Ingresar"}
       </button>
     </form>
   );
