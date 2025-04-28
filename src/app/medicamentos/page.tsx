@@ -3,26 +3,40 @@
 import { useState } from "react";
 import SearchBar from "@/app/components/SearchBar";
 import MedicamentosCard, { Medicamento } from "@/app/components/MedicamentosCard";
-
+import { createClient } from "@supabase/supabase-js";
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 export default function MedicamentosPage() {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleSearch = async (nombre: string) => {
-    setLoading(true); // 👈 empieza la carga
+    setLoading(true);
 
-    setTimeout(() => {
-      console.log("Buscar medicamento:", nombre);
+    try {
+      // Agregar un pequeño delay de 1000ms para mejor UX
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Dejamos de momento la func vacia
-    // Ejemplo para más adelante:
-    // const response = await fetch(`/api/medicamentos?nombre=${nombre}`);
-    // const data = await response.json();
-    // setMedicamentos(data);
+      const { data, error } = await supabase
+        .from('medicamentos')
+        .select('*')
+        .ilike('nombre', `%${nombre}%`); // Búsqueda sin case sensitive
 
-      setLoading(false); // 👈 termina la carga
-    }, 1000);
+      if (error) {
+        console.error('Error buscando medicamentos:', error.message);
+        setMedicamentos([]);
+      } else {
+        setMedicamentos(data as Medicamento[]);
+      }
+    } catch (err) {
+      console.error('Error inesperado:', err);
+      setMedicamentos([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
