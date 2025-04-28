@@ -7,16 +7,22 @@ import MedicamentosCard, { Medicamento } from "@/app/components/MedicamentosCard
 export default function MedicamentosPage() {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleSearch = async (nombre: string) => {
-    // Aquí en el futuro hay que tener un fetch real a la API o base de datos
-    console.log("Buscar medicamento:", nombre);
+    setLoading(true); // 👈 empieza la carga
+
+    setTimeout(() => {
+      console.log("Buscar medicamento:", nombre);
 
     // Dejamos de momento la func vacia
     // Ejemplo para más adelante:
     // const response = await fetch(`/api/medicamentos?nombre=${nombre}`);
     // const data = await response.json();
     // setMedicamentos(data);
+
+      setLoading(false); // 👈 termina la carga
+    }, 1000);
   };
 
   return (
@@ -30,7 +36,11 @@ const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-        {medicamentos.length > 0 ? (
+        {loading ? (
+          <p className="text-center text-blue-600 text-lg mt-10">
+            Cargando medicamentos...
+          </p>
+        ) : medicamentos.length > 0 ? (
           medicamentos.map((med) => (
             <MedicamentosCard key={med.id} medicamento={med} />
           ))
