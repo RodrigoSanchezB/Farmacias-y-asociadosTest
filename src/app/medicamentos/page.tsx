@@ -13,31 +13,41 @@ export default function MedicamentosPage() {
 const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleSearch = async (nombre: string) => {
-    setLoading(true);
+const handleSearch = async (nombre: string) => {
+  setLoading(true);
 
-    try {
-      // Agregar un pequeño delay de 1000ms para mejor UX
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  try {
+    // Delay UX
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const { data, error } = await supabase
-        .from('medicamentos')
-        .select('*')
-        .ilike('nombre', `%${nombre}%`); // Búsqueda sin case sensitive
+    const { data, error } = await supabase
+      .from("medicamentos")
+      .select("*")
+      .ilike("nombre", `%${nombre}%`);
 
-      if (error) {
-        console.error('Error buscando medicamentos:', error.message);
-        setMedicamentos([]);
-      } else {
-        setMedicamentos(data as Medicamento[]);
-      }
-    } catch (err) {
-      console.error('Error inesperado:', err);
+    if (error) {
+      console.error("Error buscando medicamentos:", error.message);
       setMedicamentos([]);
-    } finally {
-      setLoading(false);
+    } else {
+      setMedicamentos(data as Medicamento[]);
+
+      // 🔄 Insertar en historial
+      for (const med of data) {
+        await supabase.from("historial_precios").insert({
+          usuario: "admin@farmacias.cl", // opcional
+          nombre: med.nombre,
+          precio: med.precio,
+        });
+      }
     }
-  };
+  } catch (err) {
+    console.error("Error inesperado:", err);
+    setMedicamentos([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <main className="p-6">
