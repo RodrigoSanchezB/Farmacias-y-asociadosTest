@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { useLanguage } from "@/app/context/LanguageContext"; // ✅ Ruta corregida
+
 
 const medicamentosMock = [
   "Paracetamol",
@@ -13,6 +15,7 @@ const medicamentosMock = [
 
 export default function MedicamentosFrecuentes() {
   const [frecuentes, setFrecuentes] = useState<string[]>([]);
+  const { lang } = useLanguage();
 
   useEffect(() => {
     const guardados = JSON.parse(localStorage.getItem("frecuentes") || "[]");
@@ -23,14 +26,35 @@ export default function MedicamentosFrecuentes() {
     let actualizados;
     if (frecuentes.includes(med)) {
       actualizados = frecuentes.filter((m) => m !== med);
-      toast.info(`${med} eliminado de tus medicamentos frecuentes`);
+      toast.info(`${med} ${t.removeMessage}`);
     } else {
       actualizados = [...frecuentes, med];
-      toast.success(`${med} guardado como frecuente`);
+      toast.success(`${med} ${t.saveMessage}`);
     }    
     setFrecuentes(actualizados);
     localStorage.setItem("frecuentes", JSON.stringify(actualizados));
   };
+
+  const translations = {
+    es: {
+      RemoveButton: 'Quitar',
+      saveButton: 'guardar',
+      saveMedicationsTitle: 'Guardados',
+      noSaveMedicationsText: 'No hay medicamentos guardados.',
+      saveMessage: "guardado como frecuente",
+      removeMessage: "eliminado de tus medicamentos frecuentes",
+    },
+    en: {
+      RemoveButton: 'Remove',
+      saveButton: 'Save',
+      saveMedicationsTitle: 'Saves',
+      noSaveMedicationsText: 'There is no medications saved.',
+      saveMessage: "save as frequent",
+      removeMessage: "remove from your frequent medications",
+    },
+  };
+
+  const t = translations[lang];
 
   return (
     <div className="space-y-4">
@@ -44,16 +68,16 @@ export default function MedicamentosFrecuentes() {
               }`}
               onClick={() => toggleFrecuente(med)}
             >
-              {frecuentes.includes(med) ? "Quitar" : "Guardar"}
+              {frecuentes.includes(med) ? t.RemoveButton : t.saveButton}
             </button>
           </li>
         ))}
       </ul>
 
       <div>
-        <h2 className="text-lg font-semibold mt-6">Guardados</h2>
+        <h2 className="text-lg font-semibold mt-6">{t.saveMedicationsTitle}</h2>
         <ul className="list-disc ml-5">
-          {frecuentes.length === 0 && <li>No hay medicamentos guardados.</li>}
+          {frecuentes.length === 0 && <li>{t.noSaveMedicationsText}</li>}
           {frecuentes.map((m) => (
             <li key={m}>{m}</li>
           ))}

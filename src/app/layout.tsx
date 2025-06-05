@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   description: "Comparador de precios de medicamentos",
 };
 
+import { LanguageProvider } from "@/app/context/LanguageContext"; // ✅ Ruta corregida
+
+// ...resto de imports
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,9 +31,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Header /> {/* ✅ Aquí agregamos el Header arriba */}
-        {children}
-        <ToastWrapper />
+        <LanguageProvider>
+          <Header />
+          {children}
+          <ToastWrapper />
+        </LanguageProvider>
       </body>
     </html>
   );
