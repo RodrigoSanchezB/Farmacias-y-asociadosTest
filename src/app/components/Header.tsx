@@ -1,7 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/app/context/LanguageContext"; // ✅ Ruta corregida
- // Ajusta ruta si es necesario
+import { useLanguage } from "@/app/context/LanguageContext"; // Ajusta ruta si es necesario
 import { useRouter } from "next/navigation";
 
 export default function Header() {
