@@ -1,7 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/app/context/LanguageContext"; // ✅ Ruta corregida
-
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export interface Medicamento {
   id: number;
@@ -10,7 +9,7 @@ export interface Medicamento {
   farmacia: string;
 }
 
-export default function MedicamentosCard({ medicamento }: { medicamento: any }) {
+export default function MedicamentosCard({ medicamento }: { medicamento: Medicamento }) {
   const { lang } = useLanguage();
 
   const translations = {
@@ -25,12 +24,13 @@ export default function MedicamentosCard({ medicamento }: { medicamento: any }) 
   };
 
   const t = translations[lang];
+
   return (
     <div className="border p-4 rounded-lg shadow hover:shadow-lg transition-all">
       <h2 className="text-xl font-bold text-blue-700">{medicamento.nombre}</h2>
       <p className="text-gray-600 mt-2">{t.price}: ${medicamento.precio}</p>
-      <p className="text-gray-600">{t.drugstore}: {medicamento.tienda}</p>
-      <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      <p className="text-gray-600">{t.drugstore}: {medicamento.farmacia}</p>
+      <button className="mt-4 bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700">
         Guardar en frecuentes
       </button>
     </div>

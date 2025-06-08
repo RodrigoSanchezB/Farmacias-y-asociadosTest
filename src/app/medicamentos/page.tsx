@@ -3,67 +3,53 @@
 import { useState } from "react";
 import SearchBar from "@/app/components/SearchBar";
 import MedicamentosCard, { Medicamento } from "@/app/components/MedicamentosCard";
-import { useLanguage } from "@/app/context/LanguageContext"; // ✅ Ruta corregida
+import { useLanguage } from "@/app/context/LanguageContext";
 
-
-/*import { createClient } from "@supabase/supabase-js";
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);*/
 export default function MedicamentosPage() {
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-//const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const { lang } = useLanguage();
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // Datos de ejemplo
-  const medicamentos = [
+  // Datos de ejemplo corregidos según la interfaz Medicamento
+  const datosEjemplo: Medicamento[] = [
     {
-      id: "1",
+      id: 1,
       nombre: "Paracetamol",
-      imagen: "/paracetamol.jpg",
-      tienda: "Cruz Verde",
-      precio: "2.700",
+      farmacia: "Cruz Verde",
+      precio: 2700,
     },
     {
-      id: "2",
+      id: 2,
       nombre: "Paracetamol",
-      imagen: "/Paracetamol.jpg",
-      tienda: "Ahumada",
-      precio: "3.200",
+      farmacia: "Ahumada",
+      precio: 3200,
     },
     {
-      id: "3",
+      id: 3,
       nombre: "Paracetamol",
-      imagen: "/Paracetamol.jpg",
-      tienda: "Salco Brand",
-      precio: "3.100",
+      farmacia: "Salco Brand",
+      precio: 3100,
     },
-    // más medicamentos...
   ];
+
+  // Estado para los medicamentos que se mostrarán
+  const [medicamentos, setMedicamentos] = useState<Medicamento[]>(datosEjemplo);
 
   const handleSearch = async (nombre: string) => {
     setLoading(true);
 
     try {
-      // Agregar un pequeño delay de 1000ms para mejor UX
+      // Delay de 1 segundo para mejor UX
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      /*const { data, error } = await supabase
-        .from('medicamentos')
-        .select('*')
-        .ilike('nombre', `%${nombre}%`); // Búsqueda sin case sensitive
+      // Simulación de filtro en frontend
+      const resultados = datosEjemplo.filter((med) =>
+        med.nombre.toLowerCase().includes(nombre.toLowerCase())
+      );
 
-      if (error) {
-        console.error('Error buscando medicamentos:', error.message);
-        setMedicamentos([]);
-      } else {
-        setMedicamentos(data as Medicamento[]);
-      }*/
+      setMedicamentos(resultados);
     } catch (err) {
-      console.error('Error inesperado:', err);
-      //setMedicamentos([]);
+      console.error("Error inesperado:", err);
+      setMedicamentos([]);
     } finally {
       setLoading(false);
     }
@@ -71,12 +57,12 @@ export default function MedicamentosPage() {
 
   const translations = {
     es: {
-      title: 'Buscar medicamentos',
-      searchButton: 'Buscar',
+      title: "Buscar medicamentos",
+      searchButton: "Buscar",
     },
     en: {
-      title: 'Search for medications',
-      searchButton: 'Search',
+      title: "Search for medications",
+      searchButton: "Search",
     },
   };
 
@@ -94,7 +80,7 @@ export default function MedicamentosPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
         {loading ? (
-          <p className="text-center text-blue-600 text-lg mt-10">
+          <p className="text-center text-blue-800 text-lg mt-10">
             Cargando medicamentos...
           </p>
         ) : medicamentos.length > 0 ? (

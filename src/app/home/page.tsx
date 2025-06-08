@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const [name, setName] = useState("");
   const router = useRouter();
 
   useEffect(() => {
     const session = localStorage.getItem("session");
     if (!session) {
       router.push("/login");
+    }
+    else{
+      const data = JSON.parse(session);
+      setName(data.name);
     }
   }, [router]); // 👈 Corregido aquí también
 
@@ -20,7 +25,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen p-4">
-      <h1 className="text-2xl font-bold">Bienvenido 👋</h1>
+      <h1 className="text-2xl font-bold">{name ? `Hola, ${name}! 👋` : "Bienvenido!"}</h1>
       <p className="mt-2">Estás dentro de una ruta protegida.</p>
       <button
         onClick={handleLogout}

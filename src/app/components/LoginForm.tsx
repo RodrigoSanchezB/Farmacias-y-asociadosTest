@@ -3,8 +3,7 @@
 import { toast } from 'react-toastify';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/app/context/LanguageContext"; // ✅ Ruta corregida
-
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function LoginForm() {
   const [email, setEmail] = useState<string>("");
@@ -20,33 +19,53 @@ export default function LoginForm() {
     }
   }, [router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      if (email === "admin@farmacias.cl" && password === "1234") {
-        localStorage.setItem("session", JSON.stringify({ email }));
-        toast.success("Inicio de sesión exitoso 🎉");
-        router.push("/home");
+    try {
+      const response = await fetch("http://localhost:3001/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data?.token) {
+          localStorage.setItem("session", JSON.stringify({
+            token: data.token,
+            name: data.name || "",
+          }));
+          toast.success("Inicio de sesión exitoso 🎉");
+          router.push("/home");
+        }
       } else {
-        toast.error("Credenciales inválidas ❌");
+        toast.error(data?.msg);
       }
+
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Error en el servidor ❌");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const translations = {
     es: {
       title: 'Iniciar sesión',
       emailPlaceholder: 'Correo electrónico',
-      passwordPlaceholbuder: 'Contraseña',
+      passwordPlaceholder: 'Contraseña',
       button: 'Ingresar',
     },
     en: {
       title: 'Log in',
-      emailPlaceholder: 'Emal',
-      passwordPlaceholbuder: 'password',
+      emailPlaceholder: 'Email',
+      passwordPlaceholder: 'Password',
       button: 'Enter',
     },
   };
@@ -66,7 +85,7 @@ export default function LoginForm() {
       />
       <input
         type="password"
-        placeholder={t.passwordPlaceholbuder}
+        placeholder={t.passwordPlaceholder}
         className="border px-4 py-2 rounded"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -75,7 +94,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+        className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
       >
         {loading ? "Cargando..." : t.button}
       </button>
