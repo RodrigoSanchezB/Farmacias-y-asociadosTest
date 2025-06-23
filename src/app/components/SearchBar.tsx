@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import MedicamentosCard, { Medicamento } from "./MedicamentosCard";
 import { toast } from "react-toastify";
+import MedicamentoGrid from "./MedicamentoGrid";
 
 export default function SearchBar() {
-  const [nombre, setNombre] = useState("");
+  const [nombre, setNombre] = useState<string>("");
   const [resultados, setResultados] = useState<Medicamento[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const { lang } = useLanguage();
 
   const translations = {
@@ -35,8 +36,16 @@ export default function SearchBar() {
     setLoading(true);
     try {
       const res = await fetch(`/api/medicamentos?nombre=${encodeURIComponent(nombre)}`);
+
+      if (res.status === 404) {
+        toast.info(t.noResults);
+        setResultados([]);
+        return;
+      }
+
       if (!res.ok) throw new Error("Error en la búsqueda");
-      const data = await res.json();
+
+      const data: Medicamento[] = await res.json();
       setResultados(data);
     } catch (err) {
       toast.error("Hubo un problema al buscar");
@@ -66,14 +75,7 @@ export default function SearchBar() {
 
       {loading && <p className="mt-4 text-gray-500">{t.loading}</p>}
 
-      <div className="mt-6">
-        {!loading && resultados.length === 0 && (
-          <p className="text-gray-600">{t.noResults}</p>
-        )}
-        {resultados.map((med) => (
-          <MedicamentosCard key={med.id} medicamento={med} />
-        ))}
-      </div>
+      {!loading && <MedicamentoGrid medicamentos={resultados} />}
     </div>
   );
 }
