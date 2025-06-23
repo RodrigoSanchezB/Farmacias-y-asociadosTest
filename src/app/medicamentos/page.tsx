@@ -4,51 +4,33 @@ import { useState } from "react";
 import SearchBar from "@/app/components/SearchBar";
 import MedicamentosCard, { Medicamento } from "@/app/components/MedicamentosCard";
 import { useLanguage } from "@/app/context/LanguageContext";
-
 export default function MedicamentosPage() {
   const { lang } = useLanguage();
   const [loading, setLoading] = useState<boolean>(false);
-
-  // Datos de ejemplo corregidos según la interfaz Medicamento
-  const datosEjemplo: Medicamento[] = [
-    {
-      id: 1,
-      nombre: "Paracetamol",
-      farmacia: "Cruz Verde",
-      precio: 2700,
-    },
-    {
-      id: 2,
-      nombre: "Paracetamol",
-      farmacia: "Ahumada",
-      precio: 3200,
-    },
-    {
-      id: 3,
-      nombre: "Paracetamol",
-      farmacia: "Salco Brand",
-      precio: 3100,
-    },
-  ];
-
-  // Estado para los medicamentos que se mostrarán
-  const [medicamentos, setMedicamentos] = useState<Medicamento[]>(datosEjemplo);
+  const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
 
   const handleSearch = async (nombre: string) => {
     setLoading(true);
 
     try {
-      // Delay de 1 segundo para mejor UX
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(`/api/medicamentos?nombre=${encodeURIComponent(nombre)}`);
+      if (!response.ok) {
+        throw new Error("Error en la consulta a la API");
+      }
 
-      // Simulación de filtro en frontend
-      const resultados = datosEjemplo.filter((med) =>
-        med.nombre.toLowerCase().includes(nombre.toLowerCase())
-      );
+      const data = await response.json();
+
+      // Asegurar que los datos coincidan con la interfaz Medicamento
+      const resultados: Medicamento[] = data.map((item: any, index: number) => ({
+        id: item.id || index,
+        nombre: item.nombre || "Desconocido",
+        farmacia: item.farmacia || "No especificada",
+        precio: item.precio || 0,
+      }));
 
       setMedicamentos(resultados);
     } catch (err) {
-      console.error("Error inesperado:", err);
+      console.error("Error al buscar medicamentos:", err);
       setMedicamentos([]);
     } finally {
       setLoading(false);
@@ -66,7 +48,7 @@ export default function MedicamentosPage() {
     },
   };
 
-  const t = translations[lang];
+  const t = translations[lang as 'es' | 'en'];
 
   return (
     <main className="p-6">
