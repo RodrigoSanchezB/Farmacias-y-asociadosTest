@@ -1,109 +1,64 @@
 "use client";
 
-import { useLanguage } from "@/app/context/LanguageContext";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createClient, User } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function Header() {
-  const router = useRouter();
-  const { lang, setLang } = useLanguage();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
-  const translations = {
-    es: {
-      search: "Buscar remedios",
-      login: "Login",
-      language: "Idioma",
-      medications: "Mis medicamentos",
-    },
-    en: {
-      search: "Search remedies",
-      login: "Login",
-      language: "Language",
-      medications: "My medications",
-    },
-  };
+  useEffect(() => {
+    // Obtener sesión activa
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
 
-  const t = translations[lang];
+    // Suscribirse a cambios de autenticación
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   return (
-    <header className="bg-blue-800 text-white w-full">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        {/* Logo alineado a la izquierda */}
-        <div
-          className="text-xl sm:text-2xl font-bold cursor-pointer"
-          onClick={() => router.push("/")}
-        >
-          Farmacias y Asociados
-        </div>
+    <header className="bg-blue-800 text-white p-4 flex justify-between items-center shadow-md">
+      <Link href="/">
+        <h1 className="text-2xl font-bold">Farmacias y Asociados</h1>
+      </Link>
 
-        {/* Botón de menú visible solo en móviles */}
-        <div className="sm:hidden">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="focus:outline-none"
-            aria-label="Abrir menú"
-          >
-            ☰
-          </button>
-        </div>
+      <nav className="flex gap-4 items-center">
+        <Link href="/medicamentos" className="hover:underline">
+          Medicamentos
+        </Link>
 
-        {/* Menú horizontal para pantallas medianas/grandes */}
-        <nav className="hidden sm:flex gap-4 sm:gap-6 text-sm sm:text-lg items-center ml-auto">
-          <button onClick={() => router.push("/medicamentos")} className="hover:underline">
-            {t.search}
-          </button>
-          <button onClick={() => router.push("/frecuentes")} className="hover:underline">
-            {t.medications}
-          </button>
-          <button
-            onClick={() => {
-              localStorage.removeItem("session");
-              router.push("/login");
-            }}
-            className="hover:underline"
-          >
-            {t.login}
-          </button>
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as "es" | "en")}
-            className="text-white bg-blue-800 border border-white rounded px-2 py-1"
-          >
-            <option value="es">Español</option>
-            <option value="en">English</option>
-          </select>
-        </nav>
-      </div>
+        <Link href="/frecuentes" className="hover:underline">
+          Frecuentes
+        </Link>
 
-      {/* Menú vertical desplegable para móviles */}
-      {menuOpen && (
-        <nav className="sm:hidden flex flex-col items-start gap-4 px-4 pb-4 text-base bg-blue-700">
-          <button onClick={() => router.push("/medicamentos")} className="hover:underline">
-            {t.search}
-          </button>
-          <button onClick={() => router.push("/frecuentes")} className="hover:underline">
-            {t.medications}
-          </button>
-          <button
-            onClick={() => {
-              localStorage.removeItem("session");
-              router.push("/login");
-            }}
-            className="hover:underline"
+        {user ? (
+          <Link
+            href="/perfil"
+            className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 transition"
           >
-            {t.login}
-          </button>
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as "es" | "en")}
-            className="text-white bg-blue-700 border border-white rounded px-2 py-1"
+            Perfil
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 transition"
           >
-            <option value="es">Español</option>
-            <option value="en">English</option>
-          </select>
-        </nav>
-      )}
+            Iniciar sesión
+          </Link>
+        )}
+      </nav>
     </header>
   );
 }
