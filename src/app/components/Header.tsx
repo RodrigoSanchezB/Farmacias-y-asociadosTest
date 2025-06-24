@@ -2,29 +2,21 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { createClient, User } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Header() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Obtener sesión activa
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
-
-    // Suscribirse a cambios de autenticación
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => {
-      authListener.subscription.unsubscribe();
+      listener.subscription.unsubscribe();
     };
   }, []);
 
@@ -33,16 +25,13 @@ export default function Header() {
       <Link href="/">
         <h1 className="text-2xl font-bold">Farmacias y Asociados</h1>
       </Link>
-
       <nav className="flex gap-4 items-center">
         <Link href="/medicamentos" className="hover:underline">
           Medicamentos
         </Link>
-
         <Link href="/frecuentes" className="hover:underline">
           Frecuentes
         </Link>
-
         {user ? (
           <Link
             href="/perfil"

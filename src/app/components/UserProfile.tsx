@@ -1,107 +1,91 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { createClient, User } from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import { toast } from "react-toastify";
 import MedicamentoGrid from "./MedicamentoGrid";
+import { supabase } from "@/lib/supabaseClient";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+interface Medicamento {
+  id: string;
+  nombre: string;
+  farmacias: any[];
+}
 
 export default function UserProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [frecuentes, setFrecuentes] = useState<any[]>([]);
+  const [frecuentes, setFrecuentes] = useState<Medicamento[]>([]);
 
+  // 1) Detectar sesión activa
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        setUser(null);
-        setFrecuentes([]);
-      }
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) setFrecuentes([]); // limpiar al logout
     });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => listener.subscription.unsubscribe();
   }, []);
 
+  // 2) Cargar frecuentes cuando haya usuario
   useEffect(() => {
     if (!user) return;
-
-    const obtenerFrecuentes = async () => {
-      const { data, error } = await supabase
-        .from("frecuentes")
-        .select("medicamentos(id, nombre), medicamento_id")
-        .eq("user_id", user.id);
-
-      if (error) {
-        toast.error("Error al cargar medicamentos frecuentes");
-        return;
-      }
-
-      const transformado = (data ?? []).map((f: any) => ({
-        id: f.medicamento_id,
-        nombre: f.medicamentos?.nombre ?? "Desconocido",
-        farmacias: [],
-      }));
-
-      setFrecuentes(transformado);
-    };
-
-    obtenerFrecuentes();
+    supabase
+      .from("frecuentes")
+      .select("medicamentos(id, nombre), medicamento_id")
+      .eq("user_id", user.id)
+      .then(({ data, error }) => {
+        if (error) {
+          toast.error("Error al cargar frecuentes");
+        } else {
+          const arr = (data ?? []).map((f: any) => ({
+            id: f.medicamento_id,
+            nombre: f.medicamentos?.nombre ?? "Desconocido",
+            farmacias: [],
+          }));
+          setFrecuentes(arr);
+        }
+      });
   }, [user]);
 
+  // acciones de auth
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error("Error al iniciar sesión");
-    } else {
+    if (error) toast.error("Error al iniciar sesión");
+    else {
       toast.success("Sesión iniciada");
-      setEmail("");
-      setPassword("");
+      setEmail(""); setPassword("");
     }
   };
-
   const signup = async () => {
     const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      toast.error("Error al registrarse");
-    } else {
+    if (error) toast.error("Error al registrarse");
+    else {
       toast.success("Registro exitoso. Revisa tu correo.");
-      setEmail("");
-      setPassword("");
+      setEmail(""); setPassword("");
     }
   };
-
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Error al cerrar sesión");
-      return;
+    if (error) toast.error("Error al cerrar sesión");
+    else {
+      toast.success("Sesión cerrada");
+      setUser(null);
+      setFrecuentes([]);
     }
-    toast.success("Sesión cerrada");
-    setUser(null);
-    setFrecuentes([]);
   };
 
   return (
     <div className="p-4 border rounded shadow-md bg-white">
       {user ? (
+        // *** SECCIÓN USUARIO AUTENTICADO ***
         <>
           <p className="text-green-700 font-semibold mb-2">
             Sesión iniciada: {user.email}
           </p>
-
-          <p>Estado user en render: Autenticado</p>
-
           <button
             onClick={logout}
             className="mb-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500"
@@ -109,13 +93,14 @@ export default function UserProfile() {
             Cerrar sesión
           </button>
 
-          <h3 className="text-xl font-bold mt-4 mb-2">Medicamentos frecuentes:</h3>
+          <h3 className="text-xl font-bold mt-4 mb-2 bg-blue-800 text-white p-2 rounded opacity-100">
+            Medicamentos frecuentes:
+          </h3>
           <MedicamentoGrid medicamentos={frecuentes} />
         </>
       ) : (
+        // *** SECCIÓN LOGIN / SIGNUP ***
         <>
-          <p>Estado user en render: No autenticado</p>
-
           <h2 className="text-xl font-bold mb-2">Iniciar sesión</h2>
           <input
             type="email"
