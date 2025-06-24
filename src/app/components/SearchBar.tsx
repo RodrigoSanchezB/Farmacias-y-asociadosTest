@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import MedicamentosCard, { Medicamento } from "./MedicamentosCard";
-import { toast } from "react-toastify";
 import MedicamentoGrid from "./MedicamentoGrid";
+import { toast } from "react-toastify";
+import { Coordinates, useGeolocation } from "../hooks/useGeolocation";
+import { haversineDistance } from "../utils/distance";
+import { Medicamento } from "./MedicamentosCard";
 
 export default function SearchBar() {
   const [nombre, setNombre] = useState<string>("");
   const [resultados, setResultados] = useState<Medicamento[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const { lang } = useLanguage();
+  const { coords } = useGeolocation();
 
   const translations = {
     es: {
@@ -26,8 +29,9 @@ export default function SearchBar() {
       noResults: 'No results found.',
     },
   };
-
   const t = translations[lang];
+
+  const UMBRAL_KM = 5;
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +40,43 @@ export default function SearchBar() {
     setLoading(true);
     try {
       const res = await fetch(`/api/medicamentos?nombre=${encodeURIComponent(nombre)}`);
-
       if (res.status === 404) {
         toast.info(t.noResults);
         setResultados([]);
         return;
       }
-
       if (!res.ok) throw new Error("Error en la búsqueda");
 
-      const data: Medicamento[] = await res.json();
+      let data: Medicamento[] = await res.json();
+
+      // Si tenemos coords, calculamos distancia y marcamos nearby
+      if (coords) {
+  data = data.map((med) => ({
+    ...med,
+    farmacias: med.farmacias.map((f) => {
+      const d = haversineDistance(
+        coords.latitude,
+        coords.longitude,
+        f.latitud!,
+        f.longitud!
+      );
+      return {
+        ...f,
+        distance: d,
+        nearby: d <= UMBRAL_KM,
+      };
+    }),
+  }));
+}
+
+// **AÑADE ESTO PARA DEBUG**
+console.log("📍 Resultados con distancias:",
+  JSON.stringify(data, null, 2)
+);
+
+setResultados(data);
+
+
       setResultados(data);
     } catch (err) {
       toast.error("Hubo un problema al buscar");
