@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { createClient, SupabaseClient, Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";  // <-- Importa el cliente aquí
 import { toast } from "react-toastify";
 
 export interface Medicamento {
@@ -16,24 +16,16 @@ export interface Medicamento {
   }[];
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default function MedicamentosCard({ medicamento }: { medicamento: Medicamento }) {
   const { lang } = useLanguage();
   const [guardado, setGuardado] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<null | { id: string }>(null);
 
-  // Escuchar cambios en el estado de autenticación
   useEffect(() => {
-    // Obtener sesión inicial
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
 
-    // Suscribirse a cambios de sesión
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -43,7 +35,6 @@ export default function MedicamentosCard({ medicamento }: { medicamento: Medicam
     };
   }, []);
 
-  // Revisar si el medicamento está guardado solo si hay usuario
   useEffect(() => {
     if (!user) {
       setGuardado(false);
