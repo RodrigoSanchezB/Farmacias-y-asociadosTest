@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient, Session, User } from "@supabase/supabase-js";
 import { toast } from "react-toastify";
 
 export interface Medicamento {
@@ -24,36 +24,52 @@ const supabase = createClient(
 export default function MedicamentosCard({ medicamento }: { medicamento: Medicamento }) {
   const { lang } = useLanguage();
   const [guardado, setGuardado] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
+  // Escuchar cambios en el estado de autenticación
   useEffect(() => {
-    const obtenerUsuario = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data?.user) {
-        setUserId(null);
-        return;
-      }
-      setUserId(data.user.id);
+    // Obtener sesión inicial
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
 
-      // Verifica si el medicamento ya está guardado
-      const { data: existentes, error: errorExiste } = await supabase
+    // Suscribirse a cambios de sesión
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Revisar si el medicamento está guardado solo si hay usuario
+  useEffect(() => {
+    if (!user) {
+      setGuardado(false);
+      return;
+    }
+
+    const verificarGuardado = async () => {
+      const { data: existentes, error } = await supabase
         .from("frecuentes")
         .select("*")
-        .eq("user_id", data.user.id)
+        .eq("user_id", user.id)
         .eq("medicamento_id", medicamento.id);
 
-      if (errorExiste) {
-        console.error("Error al verificar frecuentes:", errorExiste.message);
-      } else {
-        setGuardado(existentes.length > 0);
+      if (error) {
+        console.error("Error al verificar frecuentes:", error.message);
+        return;
       }
+
+      setGuardado((existentes ?? []).length > 0);
     };
 
-    obtenerUsuario();
-  }, [medicamento.id]);
+    verificarGuardado();
+  }, [medicamento.id, user]);
 
   const toggleFrecuente = async () => {
-    if (!userId) {
+    if (!user) {
       toast.error(lang === "es" ? "Debes iniciar sesión" : "You must log in");
       return;
     }
@@ -62,7 +78,7 @@ export default function MedicamentosCard({ medicamento }: { medicamento: Medicam
       const response = await fetch("/api/frecuentes", {
         method: guardado ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, medicamento_id: medicamento.id }),
+        body: JSON.stringify({ user_id: user.id, medicamento_id: medicamento.id }),
       });
 
       if (!response.ok) throw new Error("Error al guardar/eliminar");

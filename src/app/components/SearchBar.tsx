@@ -56,7 +56,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="max-w-xl mx-auto my-8">
+    <div className="max-w-4xl mx-auto my-8 px-4">
       <form onSubmit={handleSearch} className="flex items-center gap-4">
         <input
           type="text"
