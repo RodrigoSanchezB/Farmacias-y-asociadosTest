@@ -30,7 +30,9 @@ export default function MedicamentosCard({ medicamento }: { medicamento: Medicam
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
     const { data: listener } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      if (listener?.subscription) listener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -56,8 +58,12 @@ export default function MedicamentosCard({ medicamento }: { medicamento: Medicam
       if (!res.ok) throw new Error();
       toast.success(
         lang === "es"
-          ? guardado ? "Eliminado de frecuentes" : "Guardado en frecuentes"
-          : guardado ? "Removed from favorites" : "Saved to favorites"
+          ? guardado
+            ? "Eliminado de frecuentes"
+            : "Guardado en frecuentes"
+          : guardado
+          ? "Removed from favorites"
+          : "Saved to favorites"
       );
       setGuardado(!guardado);
     } catch {
