@@ -18,19 +18,17 @@ export default function UserProfile() {
   const [password, setPassword] = useState("");
   const [frecuentes, setFrecuentes] = useState<Medicamento[]>([]);
 
-  // 1) Detectar sesión activa
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
-      if (!session?.user) setFrecuentes([]); // limpiar al logout
+      if (!session?.user) setFrecuentes([]);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // 2) Cargar frecuentes cuando haya usuario
   useEffect(() => {
     if (!user) return;
     supabase
@@ -51,7 +49,6 @@ export default function UserProfile() {
       });
   }, [user]);
 
-  // acciones de auth
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) toast.error("Error al iniciar sesión");
@@ -60,6 +57,7 @@ export default function UserProfile() {
       setEmail(""); setPassword("");
     }
   };
+
   const signup = async () => {
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) toast.error("Error al registrarse");
@@ -68,6 +66,7 @@ export default function UserProfile() {
       setEmail(""); setPassword("");
     }
   };
+
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) toast.error("Error al cerrar sesión");
@@ -79,59 +78,61 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="p-4 border rounded shadow-md bg-white">
-      {user ? (
-        // *** SECCIÓN USUARIO AUTENTICADO ***
-        <>
-          <p className="text-green-700 font-semibold mb-2">
-            Sesión iniciada: {user.email}
-          </p>
-          <button
-            onClick={logout}
-            className="mb-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500"
-          >
-            Cerrar sesión
-          </button>
+    <div className="flex justify-center items-start mt-10 px-4">
+      <div className="w-full max-w-md bg-gray-100 border border-gray-300 rounded-lg shadow-md p-6">
+        {user ? (
+          <>
+            <p className="text-green-700 font-semibold mb-4">
+              Sesión iniciada: {user.email}
+            </p>
+            <button
+              onClick={logout}
+              className="w-full mb-6 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500"
+            >
+              Cerrar sesión
+            </button>
 
-          <h3 className="text-xl font-bold mt-4 mb-2 bg-blue-800 text-white p-2 rounded opacity-100">
-            Medicamentos frecuentes:
-          </h3>
-          <MedicamentoGrid medicamentos={frecuentes} />
-        </>
-      ) : (
-        // *** SECCIÓN LOGIN / SIGNUP ***
-        <>
-          <h2 className="text-xl font-bold mb-2">Iniciar sesión</h2>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Correo"
-            className="block w-full mb-2 p-2 border rounded"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            className="block w-full mb-4 p-2 border rounded"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={login}
-              className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
+            <h3 className="text-lg font-bold mb-3 bg-blue-800 text-white p-2 rounded">
+              Medicamentos frecuentes:
+            </h3>
+            <MedicamentoGrid medicamentos={frecuentes} />
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">
               Iniciar sesión
-            </button>
-            <button
-              onClick={signup}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-            >
-              Registrarse
-            </button>
-          </div>
-        </>
-      )}
+            </h2>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Correo electrónico"
+              className="block w-full mb-3 p-2 border border-gray-400 rounded"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña"
+              className="block w-full mb-4 p-2 border border-gray-400 rounded"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={login}
+                className="flex-1 bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Iniciar sesión
+              </button>
+              <button
+                onClick={signup}
+                className="flex-1 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500"
+              >
+                Registrarse
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
