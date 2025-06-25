@@ -3,7 +3,7 @@ import LoginForm from "../LoginForm";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 
-// Mock del router y contexto
+
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
