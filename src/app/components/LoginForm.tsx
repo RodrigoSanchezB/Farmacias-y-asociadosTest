@@ -9,6 +9,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { lang } = useLanguage();
 
@@ -45,9 +46,8 @@ export default function LoginForm() {
           router.push("/home");
         }
       } else {
-        toast.error(data?.msg);
+        setError(data?.msg || "Error desconocido");
       }
-
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Error en el servidor ❌");
@@ -92,6 +92,7 @@ export default function LoginForm() {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+      {error && <p className="text-red-500">{error}</p>}
       <button
         type="submit"
         disabled={loading}
