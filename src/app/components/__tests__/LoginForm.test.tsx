@@ -41,7 +41,7 @@ describe("LoginForm", () => {
   });
 
   it("hace el login exitoso y redirige", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ token: "abc123", name: "Pedro" }),
     });
@@ -63,7 +63,7 @@ describe("LoginForm", () => {
   });
 
   it("muestra mensaje de error si el login falla", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       json: async () => ({ msg: "Credenciales inválidas" }),
     });
