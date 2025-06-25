@@ -67,7 +67,7 @@ describe("LoginForm", () => {
       ok: false,
       json: async () => ({ msg: "Credenciales inválidas" }),
     });
-
+  
     render(<LoginForm />);
     fireEvent.change(screen.getByPlaceholderText("Correo electrónico"), {
       target: { value: "mal@correo.com" },
@@ -75,9 +75,9 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByPlaceholderText("Contraseña"), {
       target: { value: "incorrecta" },
     });
-
+  
     fireEvent.click(screen.getByRole("button", { name: "Ingresar" }));
-
+  
     await waitFor(() => {
       expect(screen.getByText("Credenciales inválidas")).toBeInTheDocument();
     });
